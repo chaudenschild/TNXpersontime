@@ -1,0 +1,39 @@
+---
+title: "DKD_example"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## TNXpersontime demo
+
+```{r}
+devtools::install_github('TNXpersontime', 'chaudenschild')
+library(TNXpersontime)
+```
+
+```{r}
+tnxpersontime.se
+
+
+encounter = read.tnxdatecsv('tnxpersontime/data/encounter.csv',
+                            c("start_date", "end_date"), "%Y%m%d")
+index = read.tnxdatecsv('tnxpersontime/data/input_file.csv',
+                        dt_cols=c("index_d", "date_death", 'date_HF'),
+                        dt_format="%d%b%y")
+
+persontime = create.tnxpersontime(encounter, index, index_file_endpoints = c("date_death", "date_HF"))
+
+persontime$load_person_time_df('tnxpersontime/data/new_days_30_df.csv')
+
+riskanalysis = create.riskanalysis(persontime, stratification_col='combo_v4', outcome_alias = 'date_HF')
+
+riskanalysis$tallied_df
+
+riskanalysis$generate_rate_risk_dfs(referent='no change - healthy', order=c('no change - healthy', 'no change - unhealthy', 'change - increased from unhealthy to unhealthy',
+                                                                 'change - increased from unhealthy to healthy', 'change - decreased from unhealthy to unhealthy', 'change - decreased from healthy to unhealthy', ''))
+
+riskanalysis$rate_df
+```

@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.csv
+tutorials/.DS_Store
+tnxpersontime/.DS_Store
+tnxpersontime/data/.DS_Store
+tnxpersontime/test.py
