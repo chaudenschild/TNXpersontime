@@ -1,8 +1,12 @@
 
-tnxpersontime.setup <- function(venv='./env') {
-  reticulate::use_virtualenv('./env', required=T)
+tnxpersontime.venv.setup <- function(venv='tnxpersontime') {
+  reticulate::virtualenv_create('./env')
+  reticulate::virtualenv_install("./env", packages = c("pandas", "numpy", "scipy"))
+  ret
+  reticulate::use_virtualenv("./env", required = TRUE)
   tnx <<- reticulate::import('tnxpersontime')
 }
+reticulate::virtualenv_root()
 
 read.tnxdatecsv <- function(filepath, dt_cols=NULL, dt_format=NULL) {
   date_csv_obj = tnx$TNXDateCsv(filepath, dt_cols=dt_cols, dt_format=dt_format)

@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/ChristianHaudenschild/OneDrive - TriNetX, Inc/TNXpersontime-R/env/bin/python3" "$0" "$@"
+'''exec' "/Users/ChristianHaudenschild/OneDrive - TriNetX, Inc/TNXpersontime/env/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

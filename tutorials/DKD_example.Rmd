@@ -11,13 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 devtools::install_github('TNXpersontime', 'chaudenschild')
+install.packages('/Users/ChristianHaudenschild/OneDrive - TriNetX, Inc/TNXpersontime', repos=NULL, type='source')
+
 library(TNXpersontime)
 ```
 
 ```{r}
-tnxpersontime.se
+tnxpersontime.setup()
 
-
+reticulate::use_virtualenv('./env', required = T)
 encounter = read.tnxdatecsv('tnxpersontime/data/encounter.csv',
                             c("start_date", "end_date"), "%Y%m%d")
 index = read.tnxdatecsv('tnxpersontime/data/input_file.csv',
