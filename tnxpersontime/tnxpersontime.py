@@ -6,7 +6,7 @@ import pandas as pd
 import scipy
 import scipy.stats
 
-
+'''
 def time_elapsed(func):
     def wrapper(*args, **kwargs):
         start = dt.datetime.now()
@@ -15,7 +15,7 @@ def time_elapsed(func):
         return out
 
     return wrapper
-
+'''
 
 class TNXDateCsv:
     def __init__(self, filepath, dt_cols=None, dt_format=None):

@@ -9,11 +9,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## TNXpersontime demo
 
-```{r}
-devtools::install_github('TNXpersontime', 'chaudenschild')
-install.packages('/Users/ChristianHaudenschild/OneDrive - TriNetX, Inc/TNXpersontime', repos=NULL, type='source')
+# Setup options
 
+1) Create venv and
+
+
+
+```{r}
 library(TNXpersontime)
+install.packages('/Users/ChristianHaudenschild/OneDrive - TriNetX, Inc/TNXpersontime', repos=NULL, type='source')
+tnxpersontime.setup()
 ```
 
 ```{r}
