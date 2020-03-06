@@ -2,7 +2,7 @@ get.python.config <- function () {
   reticulate::py_discover_config()
 }
 
-tnxpersontime.setup <- function(venv='tnxpersontime-venv') {
+tnxpersontime.venv.setup <- function(venv='tnxpersontime-venv') {
   if (!(dir.exists(venv))) {
     reticulate::virtualenv_create(venv,'python3')
     reticulate::virtualenv_install(venv,c('numpy','pandas'))
