@@ -1,4 +1,5 @@
 import datetime as dt
+import functools
 from collections import defaultdict
 
 import numpy as np
@@ -8,6 +9,7 @@ import scipy.stats
 
 
 def time_elapsed(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         start = dt.datetime.now()
         out = func(*args, **kwargs)
@@ -17,10 +19,15 @@ def time_elapsed(func):
     return wrapper
 
 
-class TNXDateCsv:
+class TNXCsv:
     def __init__(self, filepath, dt_cols=None, dt_format=None):
         self.raw_file = pd.read_csv(filepath)
         self._process_csv(dt_cols, dt_format)
+
+    @classmethod
+    def create(cls, filepath, dt_cols=None, dt_format=None, *args, **kwargs):
+        obj = cls(filepath, dt_cols=None, dt_format=None, *args, **kwargs)
+        return obj.df
 
     def _process_csv(self, dt_cols, dt_format):
         self.df = self.raw_file.copy()
@@ -34,7 +41,7 @@ class TNXDateCsv:
         return self.df
 
 
-class TNXLabCsv(TNXDateCsv):
+class TNXLabCsv(TNXCsv):
     def __init__(self, filepath, dt_cols=None, dt_format=None, included_lab_codes='all', code_alias='code'):
 
         self.raw_file = pd.read_csv(filepath)
@@ -65,8 +72,10 @@ class PersonTime:
         self.endpoints = index_file_endpoints
         self.patient_id_alias = patient_id_alias
         self.index_date_alias = index_date_alias
-        self.encounter_file = encounter_object()
-        self.index_file = index_object()
+        self.encounter_file = encounter_object() if isinstance(
+            encounter_object, TNXCsv) else encounter_object
+        self.index_file = index_object() if isinstance(
+            index_object, TNXCsv) else encounter_object
 
         self._make_patient_dict()
 
