@@ -2,6 +2,7 @@ import datetime as dt
 import functools
 from collections import defaultdict
 
+import dill
 import numpy as np
 import pandas as pd
 import scipy
@@ -9,6 +10,7 @@ import scipy.stats
 
 
 def time_elapsed(func):
+    """Decorator for timing a function"""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         start = dt.datetime.now()
@@ -20,12 +22,26 @@ def time_elapsed(func):
 
 
 class TNXCsv:
+    """Base class for reading in TNX data and converting specified columns to datetime format
+    Args:
+        filepath (str): filepath to csv
+        dt_cols (list of str, optional): list of columns to be converted (default: None)
+        dt_format (str, optional): string format to use for dt_cols, based on strftime. E.g. %y%m%d (default: None)
+    """
+
     def __init__(self, filepath, dt_cols=None, dt_format=None):
         self.raw_file = pd.read_csv(filepath)
         self._process_csv(dt_cols, dt_format)
 
     @classmethod
     def create(cls, filepath, dt_cols=None, dt_format=None, *args, **kwargs):
+        """Class method that creates and returns a dataframe directly
+        Args:
+            filepath (str): filepath to csv
+            dt_cols (list of str, optional): list of columns to be converted (default: None)
+            dt_format (str, optional): string format to use for dt_cols, based on strftime. E.g. %y%m%d (default: None)
+            *args, **kwargs: additional arguments to be passed to TNXCsv subclass constructors
+        """
         obj = cls(filepath, dt_cols=None, dt_format=None, *args, **kwargs)
         return obj.df
 
@@ -42,6 +58,7 @@ class TNXCsv:
 
 
 class TNXLabCsv(TNXCsv):
+
     def __init__(self, filepath, dt_cols=None, dt_format=None, included_lab_codes='all', code_alias='code'):
 
         self.raw_file = pd.read_csv(filepath)
@@ -60,6 +77,21 @@ class TNXProcedureCsv(TNXLabCsv):
 
 
 class PersonTime:
+    """Performs person-time calculations with encounter and index objects
+    Args:
+        encounter_object (TNXCsv, pandas DataFrame): TNX-style encounter file, either loaded into a TNXCsv or as a pandas DataFrame
+        index_object (TNXCsv, pandas DataFrame): An index file containing a patient id column and an index date column at minimum, with optional endpoints
+        index_file_endpoints (list of str, optional): list of columns in the index file that are to be considered as endpoints (default: None)
+        patient_id_alias (str, optional): alternate column name for the patient id column (default: 'patient_id')
+
+    Attributes:
+        endpoints: index file endpoints
+        patient_id_alias: patient id column name
+        index date alias: index date column name
+        index_file: pandas DataFrame containing index information
+        encounter_file: subsetted encounter pandas DataFrame that includes only encounters of patients present in the index file
+    """
+
     def __init__(
         self,
         encounter_object,
@@ -87,6 +119,7 @@ class PersonTime:
         ]
 
     def _make_patient_dict(self):
+        """Creates the patient_dict, automatically called on init"""
 
         self.patient_dict = defaultdict(lambda: {})
 
@@ -103,6 +136,14 @@ class PersonTime:
                     self.patient_dict[idx][endpoint] = date
 
     def _person_time(self, pt, window_days, index_offset):
+        """Calculate a single patient's person-days
+        Args:
+            pt (pandas DataFrame): a single patient's encounters
+            window_days (int): number of days in before-after window to use in the person-days calculation
+            index_offset (int): amount of days to offset the index date when beginning patient time tally (e.g. 0 is equivalent to just using the index_date)
+        Returns:
+            window_time (int), total_time (int): person days-at-risk taking into account windowing and not taking into account windowing, respectively
+        """
 
         window = pd.Timedelta(value=window_days, unit="days")
         pt_id = list(set(pt[self.patient_id_alias]))[0]
@@ -112,7 +153,12 @@ class PersonTime:
             endpoint = min(endpoint)
 
         def _windowed_time(row):
-
+            """Calculate person days of a single row in encounter file
+            Args:
+                row (pandas Series): single row of encounter file
+            Returns:
+                pandas DatetimeIndex
+            """
             start = max(
                 row.start_date - window,
                 self.patient_dict[row.patient_id][self.index_date_alias]
@@ -155,9 +201,17 @@ class PersonTime:
 
     @time_elapsed
     def generate_person_time_df(
-        self, window_days, index_offset, save_output=True, output_save_path=None
+        self, window_days, index_offset=0, save_output=True, output_save_path=None
     ):
-
+        """Calculates patient-by-patient days-at-risk and stores it as person_time_df attribute
+            Args:
+                window_days (int): number of days before and after encounter start dates and end dates to consider in the days-at-risk calculations
+                index_offset (int, optional): number of days offset from the index date to begin patient days-at-risk tally (default: 0)
+                save_output (bool, optional): if True, saves the output as a csv (default: True)
+                output_save_path (str, optional): target save path for the output csv, if save_output is set to True (default: None)
+            Returns:
+                None
+        """
         if save_output:
             assert output_save_path is not None
 
@@ -179,6 +233,10 @@ class PersonTime:
             print(f"Output saved to {output_save_path}")
 
     def load_person_time_df(self, fpath):
+        """load a precomputed person_time_df
+        Args:
+            fpath (str): file path
+        """
         self.person_time_df = pd.read_csv(fpath)
 
         try:
@@ -189,17 +247,60 @@ class PersonTime:
             print(err)
             print(f'{sum(unknown_pts)} patient ids from loaded file not found in patient dictionary. Did you load the correct file?')
 
+    def save_pkl(self, fname):
+        """Pickles PersonTime object
+        Args:
+            fname (str): file name to save as
+        """
+        with open(fname, 'wb') as out:
+            dill.dump(self, out)
+
+    @staticmethod
+    def read_from_pkl(fname):
+        """Reads in a PersonTime object from a pickle file
+        Args:
+            fname (str): file name to read from
+        """
+        with open(fname, 'rb') as file:
+            pt = dill.load(file)
+        return pt
+
+    def __getattr__(self, attr):
+        if attr == 'person_time_df':
+            raise AttributeError(
+                'person_time_df not found - either run generate_person_time_df method or load_person_time_df')
+        else:
+            raise AttributeError(f'{attr} not found')
+
 
 class RiskAnalysis():
-    def __init__(self, persontime, stratification_col, outcome_alias, empty_value=''):
+    """Creates risk metrics and rate metrics using the time-at-risk from a PersonTime object
+    Args:
+        persontime (PersonTime): PersonTime object with person_time_df computed
+        exposure_col (str): Column containing the levels of the exposure variable
+        outcome_col (str): Column containing date of cases, or nan values if absent. Must be one of the endpoints specified in the PersonTime object.
+        empty_value (str, optional): Name of the level for non-case patients (default: '')
+
+    Raises:
+        AssertionError if outcome_col not in PersonTime endpoints
+    """
+
+    def __init__(self, persontime, exposure_col, outcome_col, empty_value=''):
 
         self.persontime = persontime
 
+        assert outcome_col in self.persontime.endpoints, f'outcome_col must be one of {self.persontime.endpoints}'
+
         self._generate_tallied_df(
-            stratification_col, outcome_alias, empty_value)
+            exposure_col, outcome_col, empty_value)
 
     def _se(self, x, type, referent):
-
+        """Calculates standard error of risks and rate ratios and differences
+        Args:
+            x (pandas Series): A level of total persons and cases in the contingency table
+            type (str): The type of desired standard error metric.
+            referent: referent level of exposure
+        """
         assert type in ['risk_difference', 'risk_ratio',
                         'rate_ratio', 'rate_difference']
 
@@ -228,22 +329,23 @@ class RiskAnalysis():
         elif type == 'rate_difference':
             return np.sqrt((IE / IPt**2) + (CE / CPt**2))
 
-    def _generate_tallied_df(self, stratification_col, outcome_alias, empty_value):
+    def _generate_tallied_df(self, exposure_col, outcome_col, empty_value):
+        """Generates count table, stratified by exposure"""
 
         self.merged_person_time_df = self.persontime.person_time_df.merge(self.persontime.index_file[[
-            self.persontime.patient_id_alias, stratification_col]], how='left')
+            self.persontime.patient_id_alias, exposure_col]], how='left')
 
-        self.merged_person_time_df[stratification_col] = self.merged_person_time_df[stratification_col].fillna(
+        self.merged_person_time_df[exposure_col] = self.merged_person_time_df[exposure_col].fillna(
             empty_value)
 
         stratified_times = self.merged_person_time_df.groupby(
-            stratification_col).apply(lambda x: sum(x.window_time))
+            exposure_col).apply(lambda x: sum(x.window_time))
 
-        stratified_cases = self.merged_person_time_df.groupby(stratification_col).apply(lambda x: sum(
-            [not pd.isna(self.persontime.patient_dict[idx][outcome_alias]) for idx in x[self.persontime.patient_id_alias]]))
+        stratified_cases = self.merged_person_time_df.groupby(exposure_col).apply(lambda x: sum(
+            [not pd.isna(self.persontime.patient_dict[idx][outcome_col]) for idx in x[self.persontime.patient_id_alias]]))
 
         stratified_persons = self.merged_person_time_df.groupby(
-            stratification_col).count().iloc[:, 0]
+            exposure_col).count().iloc[:, 0]
 
         self.tallied_df = pd.concat([stratified_persons, stratified_cases, stratified_times], axis=1).rename(
             columns={self.persontime.patient_id_alias: 'persons', 0: 'cases', 1: 'time'})
@@ -252,6 +354,7 @@ class RiskAnalysis():
         self.tallied_df = self.tallied_df.astype('int')
 
     def _calculate_df_metrics(self, confidence_level, crude_colname, metric_type, referent, denom, order):
+        """Calculate various risks, rates and confidence intervals for both"""
 
         c_level_str = str(int(confidence_level * 100))
         alpha = abs(scipy.stats.norm.ppf((1 - confidence_level) / 2))
@@ -286,10 +389,31 @@ class RiskAnalysis():
 
         return df
 
-    def generate_rate_risk_dfs(self, referent, person_denom=100, rate_denom=100000, confidence_level=0.95, order=None):
+    def generate_rate_risk_dfs(self, referent, risk_denom=100, rate_denom=100000, confidence_level=0.95, order=None):
+        """Creates rate_df and risk_df attributes in the RiskAnalysis object
+        Args:
+            referent (str): referent level of the exposure
+            risk_denom (int, optional): denominator for the risk calculations (default: 100)
+            rate_denom (int, optional): denominator for rate calculations (default: 100000)
+            confidence_level (float, optional): confidence interval level, between 0 and 1 (default: 0.95)
+            order (list of str, optional): ordering of exposure variables in the respective dfs (default: None)
+        Raises:
+            ValueError if confidence level is out of bounds
+        """
+
+        if confidence_level >= 1.0 or confidence_level <= 0:
+            raise ValueError('confidence_level must be between 0 and 1')
 
         self.risk_df = self._calculate_df_metrics(
-            confidence_level=confidence_level, crude_colname=f'crude_risk_per_{person_denom}', metric_type='risk', denom=person_denom, referent=referent, order=order)
+            confidence_level=confidence_level, crude_colname=f'crude_risk_per_{person_denom}', metric_type='risk', denom=risk_denom, referent=referent, order=order)
 
         self.rate_df = self._calculate_df_metrics(
             confidence_level=confidence_level, crude_colname=f'crude_rate_per_{rate_denom}', metric_type='rate', denom=rate_denom, referent=referent, order=order)
+
+    def __getattr__(self, attr):
+
+        if attr in ['risk_df', 'rate_df']:
+            raise AttributeError(
+                'risk and rate not calculated, run generate_rate_risk_dfs')
+        else:
+            raise AttributeError(f'{attr} not found')

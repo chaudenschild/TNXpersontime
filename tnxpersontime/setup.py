@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='tnxpersontime',
-      version='0.1',
+      version='0.2',
       description='Tool suite for risk and incidence calculations using TriNetX data',
       url='http://github.com/chaudenschild/TNXpersontime',
       author='Christian Haudenschild',
