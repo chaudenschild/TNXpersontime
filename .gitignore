@@ -7,4 +7,5 @@ tutorials/.DS_Store
 tnxpersontime/.DS_Store
 tnxpersontime/data/.DS_Store
 tnxpersontime/test.py
-tutorials/.ipynb_checkpoints/TNXpersontime Demo-checkpoint.ipynb
+tutorials/.ipynb_checkpoints/*
+.DS_Store
