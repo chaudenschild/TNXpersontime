@@ -107,7 +107,7 @@ class PersonTime:
         self.encounter_file = encounter_object() if isinstance(
             encounter_object, TNXCsv) else encounter_object
         self.index_file = index_object() if isinstance(
-            index_object, TNXCsv) else encounter_object
+            index_object, TNXCsv) else index_object
 
         self._make_patient_dict()
 

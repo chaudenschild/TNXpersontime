@@ -9,3 +9,5 @@ tnxpersontime/data/.DS_Store
 tnxpersontime/test.py
 tutorials/.ipynb_checkpoints/*
 .DS_Store
+tnxpersontime/dask_test.py
+tnxpersontime/dask_test_script.py
