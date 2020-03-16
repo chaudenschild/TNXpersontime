@@ -18,6 +18,7 @@ class Keys(str, Enum):
     value: str
 
     Escape = "escape"  # Also Control-[
+    ShiftEscape = "s-escape"
 
     ControlAt = "c-@"  # Also Control-Space.
 
@@ -48,10 +49,43 @@ class Keys(str, Enum):
     ControlY = "c-y"
     ControlZ = "c-z"
 
+    Control1 = "c-1"
+    Control2 = "c-2"
+    Control3 = "c-3"
+    Control4 = "c-4"
+    Control5 = "c-5"
+    Control6 = "c-6"
+    Control7 = "c-7"
+    Control8 = "c-8"
+    Control9 = "c-9"
+    Control0 = "c-0"
+
+    ControlShift1 = "c-s-1"
+    ControlShift2 = "c-s-2"
+    ControlShift3 = "c-s-3"
+    ControlShift4 = "c-s-4"
+    ControlShift5 = "c-s-5"
+    ControlShift6 = "c-s-6"
+    ControlShift7 = "c-s-7"
+    ControlShift8 = "c-s-8"
+    ControlShift9 = "c-s-9"
+    ControlShift0 = "c-s-0"
+
     ControlBackslash = "c-\\"
     ControlSquareClose = "c-]"
     ControlCircumflex = "c-^"
     ControlUnderscore = "c-_"
+
+    Left = "left"
+    Right = "right"
+    Up = "up"
+    Down = "down"
+    Home = "home"
+    End = "end"
+    Insert = "insert"
+    Delete = "delete"
+    PageUp = "pageup"
+    PageDown = "pagedown"
 
     ControlLeft = "c-left"
     ControlRight = "c-right"
@@ -60,34 +94,33 @@ class Keys(str, Enum):
     ControlHome = "c-home"
     ControlEnd = "c-end"
     ControlInsert = "c-insert"
-
-    ShiftControlLeft = "s-c-left"
-    ShiftControlRight = "s-c-right"
-    ShiftControlHome = "s-c-home"
-    ShiftControlEnd = "s-c-end"
-
-    Up = "up"
-    Down = "down"
-    Right = "right"
-    Left = "left"
+    ControlDelete = "c-delete"
+    ControlPageUp = "c-pageup"
+    ControlPageDown = "c-pagedown"
 
     ShiftLeft = "s-left"
+    ShiftRight = "s-right"
     ShiftUp = "s-up"
     ShiftDown = "s-down"
-    ShiftRight = "s-right"
-    ShiftDelete = "s-delete"
-    BackTab = "s-tab"  # shift + tab
     ShiftHome = "s-home"
     ShiftEnd = "s-end"
     ShiftInsert = "s-insert"
+    ShiftDelete = "s-delete"
+    ShiftPageUp = "s-pageup"
+    ShiftPageDown = "s-pagedown"
 
-    Home = "home"
-    End = "end"
-    Delete = "delete"
-    ControlDelete = "c-delete"
-    PageUp = "pageup"
-    PageDown = "pagedown"
-    Insert = "insert"
+    ControlShiftLeft = "c-s-left"
+    ControlShiftRight = "c-s-right"
+    ControlShiftUp = "c-s-up"
+    ControlShiftDown = "c-s-down"
+    ControlShiftHome = "c-s-home"
+    ControlShiftEnd = "c-s-end"
+    ControlShiftInsert = "c-s-insert"
+    ControlShiftDelete = "c-s-delete"
+    ControlShiftPageUp = "c-s-pageup"
+    ControlShiftPageDown = "c-s-pagedown"
+
+    BackTab = "s-tab"  # shift + tab
 
     F1 = "f1"
     F2 = "f2"
@@ -114,6 +147,31 @@ class Keys(str, Enum):
     F23 = "f23"
     F24 = "f24"
 
+    ControlF1 = "c-f1"
+    ControlF2 = "c-f2"
+    ControlF3 = "c-f3"
+    ControlF4 = "c-f4"
+    ControlF5 = "c-f5"
+    ControlF6 = "c-f6"
+    ControlF7 = "c-f7"
+    ControlF8 = "c-f8"
+    ControlF9 = "c-f9"
+    ControlF10 = "c-f10"
+    ControlF11 = "c-f11"
+    ControlF12 = "c-f12"
+    ControlF13 = "c-f13"
+    ControlF14 = "c-f14"
+    ControlF15 = "c-f15"
+    ControlF16 = "c-f16"
+    ControlF17 = "c-f17"
+    ControlF18 = "c-f18"
+    ControlF19 = "c-f19"
+    ControlF20 = "c-f20"
+    ControlF21 = "c-f21"
+    ControlF22 = "c-f22"
+    ControlF23 = "c-f23"
+    ControlF24 = "c-f24"
+
     # Matches any key.
     Any = "<any>"
 
@@ -136,6 +194,13 @@ class Keys(str, Enum):
     Enter = ControlM
     Backspace = ControlH
 
+    # ShiftControl was renamed to ControlShift in
+    # 888fcb6fa4efea0de8333177e1bbc792f3ff3c24 (20 Feb 2020).
+    ShiftControlLeft = ControlShiftLeft
+    ShiftControlRight = ControlShiftRight
+    ShiftControlHome = ControlShiftHome
+    ShiftControlEnd = ControlShiftEnd
+
 
 ALL_KEYS: List[str] = [k.value for k in Keys]
 
@@ -146,4 +211,9 @@ KEY_ALIASES: Dict[str, str] = {
     "c-space": "c-@",
     "enter": "c-m",
     "tab": "c-i",
+    # ShiftControl was renamed to ControlShift.
+    "s-c-left": "c-s-left",
+    "s-c-right": "c-s-right",
+    "s-c-home": "c-s-home",
+    "s-c-end": "c-s-end",
 }
