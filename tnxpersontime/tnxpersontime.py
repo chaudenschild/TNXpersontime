@@ -148,7 +148,7 @@ class PersonTime:
         """
 
         window = pd.Timedelta(value=window_days, unit="days")
-        pt_id = pt.name  # list(set(pt[self.patient_id_alias]))[0]
+        pt_id = list(set(pt.index))[0]
         endpoint = [self.patient_dict[pt_id][e] for e in self.endpoints]
         endpoint = [e for e in endpoint if not pd.isnull(e)]
         if endpoint:
@@ -163,7 +163,7 @@ class PersonTime:
             """
             start = max(
                 row.start_date - window,
-                self.patient_dict[row.patient_id][self.index_date_alias]
+                self.patient_dict[pt_id][self.index_date_alias]
                 + pd.Timedelta(value=index_offset, unit="days"),
             )
 
