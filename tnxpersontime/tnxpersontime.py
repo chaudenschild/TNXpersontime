@@ -1,12 +1,14 @@
 import datetime as dt
 import functools
 from collections import defaultdict
+from multiprocessing import cpu_count
 
 import dill
 import numpy as np
 import pandas as pd
 import scipy
 import scipy.stats
+from dask import dataframe as dd
 
 
 def time_elapsed(func):
@@ -146,7 +148,7 @@ class PersonTime:
         """
 
         window = pd.Timedelta(value=window_days, unit="days")
-        pt_id = list(set(pt[self.patient_id_alias]))[0]
+        pt_id = pt.name  # list(set(pt[self.patient_id_alias]))[0]
         endpoint = [self.patient_dict[pt_id][e] for e in self.endpoints]
         endpoint = [e for e in endpoint if not pd.isnull(e)]
         if endpoint:
@@ -218,9 +220,12 @@ class PersonTime:
         print(
             f"Generating person-time data for {len(self.patient_dict)} patients and {len(self.encounter_file)} encounters with {window_days} day window and {index_offset} day offset from index date."
         )
-        processed = self.encounter_file.groupby(self.patient_id_alias).apply(
-            self._person_time, window_days=window_days, index_offset=index_offset
-        )
+        # processed = self.encounter_file.groupby(self.patient_id_alias).apply(
+        #    self._person_time, window_days=window_days, index_offset=index_offset
+        # )
+        processed = dd.from_pandas(self.encounter_file.set_index(self.patient_id_alias), npartitions=cpu_count()).groupby(self.patient_id_alias).apply(
+            self._person_time, window_days=window_days, index_offset=index_offset, meta=(None, 'O')).compute(scheduler='processes')
+
         out_df = pd.DataFrame(
             processed.tolist(),
             index=processed.index,
