@@ -44,7 +44,8 @@ class TNXCsv:
             dt_format (str, optional): string format to use for dt_cols, based on strftime. E.g. %y%m%d (default: None)
             *args, **kwargs: additional arguments to be passed to TNXCsv subclass constructors
         """
-        obj = cls(filepath, dt_cols=None, dt_format=None, *args, **kwargs)
+        obj = cls(filepath, dt_cols=dt_cols,
+                  dt_format=dt_format, *args, **kwargs)
         return obj.df
 
     def _process_csv(self, dt_cols, dt_format):
