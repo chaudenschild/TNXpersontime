@@ -28,33 +28,25 @@ class TNXCsv:
     Args:
         filepath (str): filepath to csv
         dt_cols (list of str, optional): list of columns to be converted (default: None)
-        dt_format (str, optional): string format to use for dt_cols, based on strftime. E.g. %y%m%d (default: None)
     """
 
-    def __init__(self, filepath, dt_cols=None, dt_format=None):
-        self.raw_file = pd.read_csv(filepath)
-        self._process_csv(dt_cols, dt_format)
+    def __init__(self, filepath, dt_cols=None):
+        if dt_cols:
+            if isinstance(dt_cols, str):
+                dt_cols = [dt_cols]
+        self.df = pd.read_csv(filepath, parse_dates=dt_cols)
 
     @classmethod
-    def create(cls, filepath, dt_cols=None, dt_format=None, *args, **kwargs):
+    def create(cls, filepath, dt_cols=None, *args, **kwargs):
         """Class method that creates and returns a dataframe directly
         Args:
             filepath (str): filepath to csv
             dt_cols (list of str, optional): list of columns to be converted (default: None)
-            dt_format (str, optional): string format to use for dt_cols, based on strftime. E.g. %y%m%d (default: None)
             *args, **kwargs: additional arguments to be passed to TNXCsv subclass constructors
         """
         obj = cls(filepath, dt_cols=dt_cols,
                   dt_format=dt_format, *args, **kwargs)
         return obj.df
-
-    def _process_csv(self, dt_cols, dt_format):
-        self.df = self.raw_file.copy()
-        if dt_cols:
-            if isinstance(dt_cols, str):
-                dt_cols = [dt_cols]
-            for col in dt_cols:
-                self.df[col] = pd.to_datetime(self.df[col], format=dt_format)
 
     def __call__(self):
         return self.df
@@ -62,7 +54,7 @@ class TNXCsv:
 
 class TNXLabCsv(TNXCsv):
 
-    def __init__(self, filepath, dt_cols=None, dt_format=None, included_lab_codes='all', code_alias='code'):
+    def __init__(self, filepath, dt_cols=None, included_lab_codes='all', code_alias='code'):
 
         self.raw_file = pd.read_csv(filepath)
 
@@ -70,12 +62,12 @@ class TNXLabCsv(TNXCsv):
             self.raw_file = self.raw_file[[
                 c in included_lab_codes for c in self.raw_file[code_alias]]]
 
-        self._process_csv(dt_cols, dt_format)
+        self.df = pd.read_csv(filepath, parse_dates=dt_cols)
 
 
 class TNXProcedureCsv(TNXLabCsv):
-    def __init__(self, filepath, dt_cols=None, dt_format=None, included_procedure_codes='all', code_alias='code'):
-        super().__init__(filepath, dt_cols, dt_format,
+    def __init__(self, filepath, dt_cols=None, included_procedure_codes='all', code_alias='code'):
+        super().__init__(filepath, dt_cols,
                          included_lab_codes=included_procedure_codes, code_alias=code_alias)
 
 
